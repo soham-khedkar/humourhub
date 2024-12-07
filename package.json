@@ -13,6 +13,7 @@
     "@kinde-oss/kinde-auth-react": "^4.0.4",
     "@supabase/auth-helpers-react": "^0.5.0",
     "@supabase/supabase-js": "^2.46.2",
+    "@tabler/icons-react": "^3.24.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^11.13.1",

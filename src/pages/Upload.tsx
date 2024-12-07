@@ -128,7 +128,7 @@ export const Upload = () => {
                 <FileImage className="w-16 h-16 mx-auto mb-4 text-gray-300" />
               )}
               <p className="text-xl mb-2 text-white">
-                Drag and drop your {uploadType} here
+                Drag and dump your {uploadType} here
               </p>
               <p className="text-gray-400">or</p>
               <input
