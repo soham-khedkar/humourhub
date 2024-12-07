@@ -5,7 +5,8 @@ import { Navbar } from './components/Navbar';
 import { Home } from './pages/Home';
 import { Upload } from './pages/Upload';
 import { Gallery } from './pages/Gallery';
-
+import Profile from './pages/Profile';
+import MemeEditor from './pages/MemeEditor';
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const session = useSession();
   
@@ -23,6 +24,9 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/gallery" element={<Gallery />} />
+        <Route path="/profile" element={<ProtectedRoute><Profile/></ProtectedRoute>} />
+        <Route path="/edit" element={<ProtectedRoute><MemeEditor/></ProtectedRoute>} />
+
         <Route 
           path="/upload" 
           element={

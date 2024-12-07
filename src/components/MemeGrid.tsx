@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Share2, Download } from 'lucide-react';
+import { Heart, Share2, Download, Trash } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Meme } from '../types';
 import { supabase } from '../lib/supabase';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 
 interface MemeGridProps {
   memes: Meme[];
+  onDelete?: (memeId: string) => void;
 }
 
-export const MemeGrid: React.FC<MemeGridProps> = ({ memes }) => {
+export const MemeGrid: React.FC<MemeGridProps> = ({ memes, onDelete }) => {
   const [likedMemes, setLikedMemes] = useState<Set<string>>(new Set());
 
   const copyMemeUrl = (url: string) => {
@@ -39,7 +41,7 @@ export const MemeGrid: React.FC<MemeGridProps> = ({ memes }) => {
     try {
       const { error } = await supabase
         .from('memes')
-        .update({ likes: meme.likes + 1 })
+        .update({ likes: (meme.likes ?? 0) + 1 })
         .eq('id', meme.id)
         .select();
 
@@ -50,6 +52,23 @@ export const MemeGrid: React.FC<MemeGridProps> = ({ memes }) => {
     } catch (error) {
       console.error('Error liking meme:', error);
       toast.error('Failed to like meme');
+    }
+  };
+
+  const handleDelete = async (memeId: string) => {
+    try {
+      const { error } = await supabase
+        .from('memes')
+        .delete()
+        .eq('id', memeId);
+
+      if (error) throw error;
+
+      toast.success('Meme deleted successfully');
+      if (onDelete) onDelete(memeId);
+    } catch (error) {
+      console.error('Error deleting meme:', error);
+      toast.error('Failed to delete meme');
     }
   };
 
@@ -99,6 +118,29 @@ export const MemeGrid: React.FC<MemeGridProps> = ({ memes }) => {
               >
                 <Download size={24} />
               </motion.button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="text-white hover:text-red-500 transition-colors"
+                  >
+                    <Trash size={24} />
+                  </motion.button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete the meme.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => handleDelete(meme.id)}>Delete</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </motion.div>
           <div className="p-4">
@@ -113,16 +155,15 @@ export const MemeGrid: React.FC<MemeGridProps> = ({ memes }) => {
                 </span>
               ))}
             </div>
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Heart size={20} className="text-red-500" />
                 <span>{meme.likes}</span>
               </div>
-            </div>
+            </div> */}
           </div>
         </motion.div>
       ))}
     </div>
   );
 };
-

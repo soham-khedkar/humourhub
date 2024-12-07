@@ -1,19 +1,23 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
-import { ImagePlus } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Footer } from '../components/sections/Footer';
+import { ChevronRight } from 'lucide-react';
 import { getMemes } from '../lib/supabase';
 import { Meme } from '../types';
 import { FeatureCard } from '../components/FeatureCard';
 import WordRotate from '../components/ui/word-rotate';
 import { AnimatedTestimonials } from '../components/ui/animated-testimonials';
+import { Footer } from '../components/sections/Footer';
+import AnimatedGradientText from '../components/ui/animated-gradient-text';
+import { cn } from '../lib/utils';
+import { LoadingScreen } from '../components/LoadingScreen';
+
 
 export const Home = () => {
   const session = useSession();
   const supabase = useSupabaseClient();
   const [mostLikedMemes, setMostLikedMemes] = useState<Meme[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchMostLikedMemes = async () => {
@@ -24,6 +28,7 @@ export const Home = () => {
       } catch (error) {
         console.error('Error fetching most liked memes:', error);
       }
+      setLoading(false);
     };
 
     fetchMostLikedMemes();
@@ -43,30 +48,31 @@ export const Home = () => {
     {
       title: "Share & Spread joy",
       description: "Share your creativity with the world and spread joy with your memes.",
-      gifUrl: "https://media.giphy.com/media/3o7aCTNjq3qiUbzrHi/giphy.gif"
+      gifUrl: "https://media.giphy.com/media/BjHIjM2YFC3rEUaMrw/giphy.gif?cid=790b7611jlsp27qwb5wdybw96t0krz9wd401l2004hxlkrs1&ep=v1_gifs_search&rid=giphy.gif&ct=g"
     }
   ];
 
   const testimonials = [
     {
-      quote: "This meme vault is lit! I've never laughed so hard in my life.",
-      name: "Meme Lord",
-      designation: "Professional Memer",
-      src: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3387&q=80"
+      quote: "I'm gonna cum to this website again and again and again.",
+      name: "Donad Trump",
+      designation: "OG President of the United States",
+      src: "https://images.unsplash.com/photo-1580128660010-fd027e1e587a?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
     },
     {
-      quote: "I've found my meme paradise. The templates are top-notch!",
-      name: "Giggles McGee",
-      designation: "Comedy Enthusiast",
-      src: "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8cG9ydHJhaXR8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60"
+      quote: "Shut up Meg! This site is awesome.",
+      name: "Peter Griffin",
+      designation: "Family Guy",
+      src: "https://ai.flux-image.com/flux/934a4c9d-c101-4f01-b7b9-dc88f53fb57a.jpg"
     },
     {
-      quote: "This site has revolutionized my meme game. I'm unstoppable now!",
-      name: "Viral Victor",
-      designation: "Social Media Influencer",
-      src: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHBvcnRyYWl0fGVufDB8fDB8fHww&auto=format&fit=crop&w=800&q=60"
+      quote: "Let's go to the moon with this website.",
+      name: "Elon Musk",
+      designation: "CEO, SpaceX",
+      src: "https://i.pinimg.com/736x/08/21/17/0821177432c8d7d70644febfdde912dd.jpg"
     }
   ];
+  if(loading) return <LoadingScreen />;
 
   return (
     <div className="min-h-screen bg-[#0A0A0F] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] text-white">
@@ -87,22 +93,31 @@ export const Home = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
+              className="mt-8 flex justify-center"
             >
-              <Button
-                variant="gradient"
-                size="lg"
+              <div
                 onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })}
-                className="flex items-center gap-2 mt-8"
+                className="cursor-pointer"
               >
-                <ImagePlus size={24} />
-                Get Started
-              </Button>
+                <AnimatedGradientText className="text-lg sm:text-xl md:text-2xl py-3 px-6">
+                  🎉 <hr className="mx-2 h-6 w-px shrink-0 bg-gray-300" />{" "}
+                  <span
+                    className={cn(
+                      `inline animate-gradient bg-gradient-to-r from-[#ffaa40] via-[#9c40ff] to-[#ffaa40] bg-[length:var(--bg-size)_100%] bg-clip-text text-transparent`,
+                    )}
+                  >
+                    Get Started!!
+                  </span>
+                  <ChevronRight className="ml-2 inline-block size-5 transition-transform duration-300 ease-in-out group-hover:translate-x-0.5" />
+                </AnimatedGradientText>
+              </div>
             </motion.div>
           )}
+
         </motion.div>
 
         <div className="max-w-7xl mx-auto px-4 pb-20">
-          <h2 className="text-4xl font-bold text-white mb-12 text-center">Look what we got!!</h2>
+          <h2 className="text-4xl font-bold text-white mb-12 lg:text-left sm:text-center">Look what we got!!</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
             {features.map((feature, index) => (
               <FeatureCard key={index} {...feature} />
@@ -137,7 +152,7 @@ export const Home = () => {
           </div>
         </div>
 
-        <div className=" py-20">
+        <div className="bg-transparent py-20">
           <h2 className="text-4xl font-bold text-white mb-12 text-center">What Our Memers Say</h2>
           <AnimatedTestimonials testimonials={testimonials} autoplay={true} />
         </div>
@@ -147,4 +162,6 @@ export const Home = () => {
     </div>
   );
 };
+
+export default Home;
 

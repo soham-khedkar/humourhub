@@ -5,6 +5,8 @@ import { MemeGrid } from '../components/MemeGrid';
 import { getMemes } from '../lib/supabase';
 import { Meme } from '../types';
 import { Search } from 'lucide-react';
+import { LoadingScreen } from '../components/LoadingScreen';
+import { toast } from 'sonner';
 
 type ContentType = 'memes' | 'templates' | 'all';
 
@@ -22,6 +24,7 @@ export const Gallery = () => {
         setMemes(data);
       } catch (error) {
         console.error('Error fetching memes:', error);
+        toast.error('Failed to fetch memes');
       }
       setLoading(false);
     };
@@ -38,6 +41,8 @@ export const Gallery = () => {
   const filteredMemes = memes.filter(meme => 
     meme.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  if (loading) return <LoadingScreen />;
 
   return (
     <div className="min-h-screen bg-[#0A0A0F] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]">
@@ -69,19 +74,10 @@ export const Gallery = () => {
           </div>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full"
-            />
-          </div>
-        ) : (
-          <MemeGrid memes={filteredMemes} />
-        )}
+        <MemeGrid memes={filteredMemes} />
       </div>
     </div>
   );
 };
 
+export default Gallery;

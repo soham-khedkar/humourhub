@@ -1,5 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
+type Meme = {
+  id: string;
+  title: string;
+  url: string;
+  type: 'meme' | 'template';
+  tags: string[];
+  user_id: string;
+  created_at: string;
+  is_edited: boolean;
+};
+
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -75,4 +86,16 @@ export const getMemes = async (type?: 'meme' | 'template') => {
     console.error('Error in getMemes:', error);
     throw error;
   }
+};
+export const getEditedMemes = async (userId: string): Promise<Meme[]> => {
+  const { data, error } = await supabase
+    .from('memes')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_edited', true);
+  if (error) {
+    console.error('Error fetching edited memes:', error);
+    throw error;
+  }
+  return data || [];
 };

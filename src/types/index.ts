@@ -5,8 +5,9 @@ export interface Meme {
   type: 'meme' | 'template';
   created_at: string;
   user_id: string;
-  likes: number;
+  likes?: number;
   tags: string[];
+  is_edited?: boolean;
 }
 
 export interface User {

@@ -1,12 +1,11 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { X, Plus, Image, FileImage } from 'lucide-react';
-import {uploadMeme}  from '../lib/supabase';
+import { uploadMeme } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { RainbowButton } from '../components/ui/RainbowButton';
 import { Toggle } from '../components/ui/Toggle';
-
 type UploadType = 'meme' | 'template';
 
 export const Upload = () => {
@@ -20,7 +19,8 @@ export const Upload = () => {
   const [currentTag, setCurrentTag] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
-
+  // Remove the loading state since we don't need an initial loading screen for this component
+  
   const handleFile = async (file: File) => {
     if (!file || !file.type.startsWith('image/')) {
       toast.error('Please upload an image file');
@@ -59,7 +59,7 @@ export const Upload = () => {
       toast.success(`${uploadType === 'meme' ? 'Meme' : 'Template'} uploaded successfully!`);
       navigate('/gallery');
     } catch (error) {
-      console.error('Error uploading file:',error);
+      console.error('Error uploading file:', error);
       toast.error('Error uploading file');
     } finally {
       setUploading(false);
@@ -93,6 +93,7 @@ export const Upload = () => {
     { value: 'template', label: 'Upload Template' },
   ];
 
+  // Remove the loading check since we don't need it
   return (
     <div className="min-h-screen pt-20 bg-[#0A0A0F] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]">
       <div className="max-w-4xl mx-auto p-6">
@@ -231,4 +232,3 @@ export const Upload = () => {
     </div>
   );
 };
-

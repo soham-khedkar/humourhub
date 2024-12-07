@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSupabaseClient, useSession } from '@supabase/auth-helpers-react';
-import { ImagePlus, LogOut, User, Menu, X, Grid } from 'lucide-react';
+import { ImagePlus, LogOut, User, Menu, X, Grid, Edit3 } from 'lucide-react';
 import { RainbowButton } from './ui/RainbowButton';
 
 export const Navbar = () => {
@@ -58,6 +58,19 @@ export const Navbar = () => {
           >
             <ImagePlus size={20} />
             <span>Upload</span>
+          </Link>
+
+          <Link 
+            to="/edit" 
+            onClick={() => setIsMenuOpen(false)}
+            className={`px-4 py-3 md:py-2 rounded-lg transition-all duration-300 flex items-center gap-2 w-full md:w-auto ${
+              location.pathname === '/edit' 
+                ? 'bg-purple-500/20 text-purple-300' 
+                : 'hover:bg-purple-500/20 text-white'
+            }`}
+          >
+            <Edit3 size={20} />
+            <span>Edit Your Meme</span>
           </Link>
           
           <div className="h-px md:h-6 w-full md:w-px bg-purple-500/20 my-2 md:my-0" />
@@ -148,3 +161,4 @@ export const Navbar = () => {
     </motion.nav>
   );
 };
+

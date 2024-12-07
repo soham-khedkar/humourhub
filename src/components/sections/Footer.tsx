@@ -8,7 +8,7 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <h3 className="text-xl font-bold mb-4 pixel-text">HumourHub</h3>
-            <p className="text-gray-400">Your one-stop destination for the dankest memes on the internet.</p>
+            <p className="text-gray-400 text-xl">Your one-stop destination for the dankest memes on the internet.You don't get memes made out of these dank thoughts 😁</p>
           </div>
           
           <div>
