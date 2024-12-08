@@ -10,14 +10,12 @@ import { AnimatedTestimonials } from '../components/ui/animated-testimonials';
 import { Footer } from '../components/sections/Footer';
 import AnimatedGradientText from '../components/ui/animated-gradient-text';
 import { cn } from '../lib/utils';
-import { LoadingScreen } from '../components/LoadingScreen';
-
+import GridPattern from '../components/ui/grid-pattern';
 
 export const Home = () => {
   const session = useSession();
   const supabase = useSupabaseClient();
   const [mostLikedMemes, setMostLikedMemes] = useState<Meme[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchMostLikedMemes = async () => {
@@ -28,7 +26,6 @@ export const Home = () => {
       } catch (error) {
         console.error('Error fetching most liked memes:', error);
       }
-      setLoading(false);
     };
 
     fetchMostLikedMemes();
@@ -42,13 +39,13 @@ export const Home = () => {
     },
     {
       title: "Browse Templates",
-      description: "Looking for some inspiration? Browse our collection of meme templates.",
+      description: "We got a good collection of templates for you to choose from full of dank humor you might like 🌚",
       gifUrl: "https://media.giphy.com/media/Y1qTxzVXuJsIcLzJyV/giphy.gif?cid=790b7611o919rbz2mo9z3ushy0eiz4ef9sny1ouerujfl16j&ep=v1_gifs_search&rid=giphy.gif&ct=g"
     },
     {
       title: "Share & Spread joy",
       description: "Share your creativity with the world and spread joy with your memes.",
-      gifUrl: "https://media.giphy.com/media/BjHIjM2YFC3rEUaMrw/giphy.gif?cid=790b7611jlsp27qwb5wdybw96t0krz9wd401l2004hxlkrs1&ep=v1_gifs_search&rid=giphy.gif&ct=g"
+      gifUrl: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbHl4ajFjODdsM3E2dDg5aDE0dWRxdW84cDlrdWRmZmNla3JhdXQ2byZlcD12MV9naWZzX3NlYXJjaCZjdD1n/l2Je2TSWnlJB96UDK/giphy.gif"
     }
   ];
 
@@ -72,18 +69,22 @@ export const Home = () => {
       src: "https://i.pinimg.com/736x/08/21/17/0821177432c8d7d70644febfdde912dd.jpg"
     }
   ];
-  if(loading) return <LoadingScreen />;
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] text-white">
-      <div className="pt-20">
+    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+      <GridPattern
+        width={40}
+        height={40}
+        className="absolute inset-0 z-0 opacity-50"
+      />
+      <div className="relative z-10 pt-20">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="max-w-4xl mx-auto text-center px-4 py-20"
         >
           <WordRotate
-            className="text-6xl font-bold text-white dark:text-white"
+            className="text-6xl font-bold text-white"
             duration={500} 
             words={["BHAI", "WO" , "MEME", "DEKHA", "KYA"]}
           />
@@ -117,7 +118,7 @@ export const Home = () => {
         </motion.div>
 
         <div className="max-w-7xl mx-auto px-4 pb-20">
-          <h2 className="text-4xl font-bold text-white mb-12 lg:text-left sm:text-center">Look what we got!!</h2>
+          <h2 className="text-4xl font-bold text-white mb-12 text-center">Look what we got!!</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
             {features.map((feature, index) => (
               <FeatureCard key={index} {...feature} />
@@ -129,7 +130,7 @@ export const Home = () => {
             {mostLikedMemes.map((meme, index) => (
               <motion.div
                 key={meme.id}
-                className="aspect-square bg-black/40 rounded-lg overflow-hidden border border-purple-500/20 group hover:border-purple-500/40 transition-colors"
+                className="aspect-square bg-gray-800 rounded-lg overflow-hidden border border-gray-700 group hover:border-purple-500 transition-colors"
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1 }}
@@ -153,12 +154,14 @@ export const Home = () => {
         </div>
 
         <div className="bg-transparent py-20">
-          <h2 className="text-4xl font-bold text-white mb-12 text-center">What Our Memers Say</h2>
+          <h2 className="text-4xl font-bold text-white mb-12 text-center">What Our Users Say</h2>
           <AnimatedTestimonials testimonials={testimonials} autoplay={true} />
         </div>
       </div>
       
+      <div>
       <Footer />
+      </div>
     </div>
   );
 };

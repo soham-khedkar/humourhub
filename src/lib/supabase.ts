@@ -1,14 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../config/supabaseInstance';
 import { Meme } from '../types';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const STORAGE_BUCKET = 'meme-vault';
 
@@ -16,7 +7,8 @@ export const uploadMeme = async (
   file: File,
   type: 'meme' | 'template',
   title: string,
-  tags: string[]
+  tags: string[],
+  isPublic: boolean
 ): Promise<void> => {
   try {
     const fileExt = file.name.split('.').pop();
@@ -50,7 +42,8 @@ export const uploadMeme = async (
         type,
         tags: tags.map(tag => tag.trim().toLowerCase()),
         user_id: user.id,
-        username: username
+        username: username,
+        public: isPublic
       });
 
     if (insertError) throw insertError;
@@ -61,7 +54,7 @@ export const uploadMeme = async (
   }
 };
 
-export const getMemes = async (type?: 'meme' | 'template') => {
+export const getMemes = async (type?: 'meme' | 'template', publicOnly: boolean = true) => {
   try {
     let query = supabase
       .from('memes')
@@ -70,6 +63,10 @@ export const getMemes = async (type?: 'meme' | 'template') => {
 
     if (type) {
       query = query.eq('type', type);
+    }
+
+    if (publicOnly) {
+      query = query.eq('public', true);
     }
 
     const { data, error } = await query;
@@ -100,12 +97,27 @@ export async function unlikeMeme(memeId: string, userId: string): Promise<void> 
 }
 
 export async function deleteMeme(memeId: string, userId: string): Promise<void> {
-  const { error } = await supabase
+  // First, delete all likes associated with this meme
+  const { error: likesError } = await supabase
+    .from('likes')
+    .delete()
+    .eq('meme_id', memeId);
+
+  if (likesError) {
+    console.error('Error deleting associated likes:', likesError);
+    throw likesError;
+  }
+
+  // Then, delete the meme itself
+  const { error: memeError } = await supabase
     .from('memes')
     .delete()
-    .match({ id: memeId, user_id: userId })
+    .match({ id: memeId, user_id: userId });
 
-  if (error) throw error
+  if (memeError) {
+    console.error('Error deleting meme:', memeError);
+    throw memeError;
+  }
 }
 
 export async function getUserLikedMemes(userId: string): Promise<string[]> {

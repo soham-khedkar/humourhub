@@ -3,11 +3,13 @@ import { motion } from 'framer-motion';
 import { useSession } from '@supabase/auth-helpers-react';
 import { Toggle } from '../components/ui/Toggle';
 import { MemeGrid } from '../components/MemeGrid';
-import { getMemes, getUserLikedMemes, likeMeme, unlikeMeme, deleteMeme } from '../lib/supabase';
+import { getMemes, getUserLikedMemes, likeMeme, unlikeMeme} from '../lib/supabase';
 import { Meme } from '../types';
 import { Search } from 'lucide-react';
 import { LoadingScreen } from '../components/LoadingScreen';
 import { toast } from 'sonner';
+import { supabase } from '../config/supabaseInstance'; // Adjust the path as necessary
+import GridPattern from '../components/ui/grid-pattern';
 
 type ContentType = 'memes' | 'templates' | 'all';
 
@@ -63,6 +65,8 @@ export const Gallery = () => {
         await likeMeme(meme.id, session.user.id);
         setLikedMemes([...likedMemes, meme.id]);
       }
+      // Update the meme's like count in the local state
+      setMemes(memes.map(m => m.id === meme.id ? { ...m, likes: (m.likes ?? 0) + (likedMemes.includes(meme.id) ? -1 : 1) } : m));
     } catch (error) {
       console.error('Error liking/unliking meme:', error);
       toast.error('Failed to like/unlike meme');
@@ -74,14 +78,21 @@ export const Gallery = () => {
       toast.error('Please log in to delete memes');
       return;
     }
-
-    if (meme.user_id !== session.user.id) {
-      toast.error('You can only delete your own memes');
-      return;
-    }
-
+  
     try {
-      await deleteMeme(meme.id, session.user.id);
+      // Delete related likes first
+      await supabase
+        .from('likes')
+        .delete()
+        .eq('meme_id', meme.id);
+  
+      // Delete the meme
+      await supabase
+        .from('memes')
+        .delete()
+        .eq('id', meme.id);
+  
+      // Update the local state
       setMemes(memes.filter(m => m.id !== meme.id));
       toast.success('Meme deleted successfully');
     } catch (error) {
@@ -93,8 +104,13 @@ export const Gallery = () => {
   if (loading) return <LoadingScreen />;
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]">
-      <div className="pt-24 px-4">
+    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+      <GridPattern
+        width={40}
+        height={40}
+        className="absolute inset-0 z-0 opacity-50"
+      />
+      <div className="relative z-10 pt-24 px-4">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -114,10 +130,10 @@ export const Gallery = () => {
               placeholder="Search by tags..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg bg-black/40 border border-purple-500/20 text-white focus:outline-none focus:border-purple-500"
+              className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-purple-500"
             />
             <button className="absolute right-2 top-1/2 transform -translate-y-1/2">
-              <Search className="w-6 h-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 animate-gradient-x" />
+              <Search className="w-6 h-6 text-gray-400" />
             </button>
           </div>
         </div>

@@ -7,6 +7,8 @@ import { Upload } from './pages/Upload';
 import { Gallery } from './pages/Gallery';
 import Profile from './pages/Profile';
 import MemeEditor from './pages/MemeEditor';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const session = useSession();
   
@@ -26,7 +28,8 @@ function App() {
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/profile" element={<ProtectedRoute><Profile/></ProtectedRoute>} />
         <Route path="/edit" element={<ProtectedRoute><MemeEditor/></ProtectedRoute>} />
-
+        <Route path="/privacy" element={<ProtectedRoute><Privacy/></ProtectedRoute>} />
+        <Route path="/terms" element={<ProtectedRoute><Terms/></ProtectedRoute>} />
         <Route 
           path="/upload" 
           element={

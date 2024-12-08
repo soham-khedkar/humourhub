@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
-import { getMemes } from '../lib/supabase';
+import { useSession } from '@supabase/auth-helpers-react';
+import { getMemes, uploadMeme } from '../lib/supabase';
 import { Meme } from '../types';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -14,10 +14,10 @@ import { DraggableText } from '../components/ui/draggable-text';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../components/ui/alert-dialog';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import GridPattern from '../components/ui/grid-pattern';
 
 export function MemeEditor() {
   const session = useSession();
-  const supabase = useSupabaseClient();
   const navigate = useNavigate();
   const [memes, setMemes] = useState<Meme[]>([]);
   const [selectedMeme, setSelectedMeme] = useState<Meme | null>(null);
@@ -124,33 +124,14 @@ export function MemeEditor() {
       const fileName = `edited_${selectedMeme.title}_${Date.now()}.jpg`;
       const file = new File([blob], fileName, { type: 'image/jpeg' });
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('meme-vault')
-        .upload(`edited/${fileName}`, file);
+      await uploadMeme(file, 'meme', `Edited: ${selectedMeme.title}`, selectedMeme.tags || [], isPublic);
 
-      if (uploadError) throw uploadError;
-
-      const { data: publicUrl } = supabase.storage
-        .from('meme-vault')
-        .getPublicUrl(uploadData.path);
-
-      const { error: insertError } = await supabase
-        .from('memes')
-        .insert([{
-          title: `Edited: ${selectedMeme.title}`,
-          url: publicUrl.publicUrl,
-          type: 'meme',
-          user_id: session.user.id,
-          public: isPublic, // Changed from is_public to public
-          is_edited: true,
-          tags: selectedMeme.tags || []
-        }]);
-
-      if (insertError) throw insertError;
-
-      setSavedMemeUrl(publicUrl.publicUrl);
       toast.success('Meme saved successfully!');
-      navigate('/profile');
+      if (isPublic) {
+        navigate('/gallery');
+      } else {
+        navigate('/profile');
+      }
     } catch (error) {
       console.error('Error saving meme:', error);
       toast.error('Failed to save meme. Please try again.');
@@ -197,8 +178,13 @@ export function MemeEditor() {
   }, [selectedMeme, texts]);
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] text-white pt-20 px-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-black text-white pt-20 px-4 relative overflow-hidden">
+      <GridPattern
+        width={40}
+        height={40}
+        className="absolute inset-0 z-0 opacity-50"
+      />
+      <div className="max-w-6xl mx-auto relative z-10">
         <h1 className="text-4xl font-bold mb-8">Meme Editor</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
@@ -323,3 +309,4 @@ export function MemeEditor() {
 }
 
 export default MemeEditor;
+

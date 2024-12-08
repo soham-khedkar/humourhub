@@ -32,8 +32,6 @@ export function Profile() {
       const memes = await getMemes();
       const userLikedMemes = memes.filter(meme => memeIds.includes(meme.id));
       setLikedMemes(userLikedMemes);
-      setLikedMemes(userLikedMemes); // Update likedMemes state
-      console.error('Error fetching liked memes:', error);
     } catch (error) {
       console.error('Error fetching liked memes:', error);
     }

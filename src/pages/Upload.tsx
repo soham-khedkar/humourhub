@@ -55,7 +55,7 @@ export const Upload = () => {
 
     setUploading(true);
     try {
-      await uploadMeme(selectedFile, uploadType, title, tags);
+      await uploadMeme(selectedFile, uploadType, title, tags, true);
       toast.success(`${uploadType === 'meme' ? 'Meme' : 'Template'} uploaded successfully!`);
       navigate('/gallery');
     } catch (error) {
