@@ -8,6 +8,7 @@ export interface Meme {
   likes?: number;
   tags: string[];
   is_edited?: boolean;
+  username: string;
 }
 
 export interface User {

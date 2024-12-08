@@ -1,15 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-
-type Meme = {
-  id: string;
-  title: string;
-  url: string;
-  type: 'meme' | 'template';
-  tags: string[];
-  user_id: string;
-  created_at: string;
-  is_edited: boolean;
-};
+import { Meme } from '../types';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -48,6 +38,9 @@ export const uploadMeme = async (
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
+    // Get user's full name from user metadata
+    const username = user.user_metadata?.full_name || 'Anonymous';
+
     // Insert into memes table
     const { error: insertError } = await supabase
       .from('memes')
@@ -56,7 +49,8 @@ export const uploadMeme = async (
         url: publicUrl,
         type,
         tags: tags.map(tag => tag.trim().toLowerCase()),
-        user_id: user.id
+        user_id: user.id,
+        username: username
       });
 
     if (insertError) throw insertError;
@@ -87,6 +81,44 @@ export const getMemes = async (type?: 'meme' | 'template') => {
     throw error;
   }
 };
+
+export async function likeMeme(memeId: string, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('likes')
+    .insert({ user_id: userId, meme_id: memeId })
+
+  if (error) throw error
+}
+
+export async function unlikeMeme(memeId: string, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('likes')
+    .delete()
+    .match({ user_id: userId, meme_id: memeId })
+
+  if (error) throw error
+}
+
+export async function deleteMeme(memeId: string, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('memes')
+    .delete()
+    .match({ id: memeId, user_id: userId })
+
+  if (error) throw error
+}
+
+export async function getUserLikedMemes(userId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('likes')
+    .select('meme_id')
+    .eq('user_id', userId)
+
+  if (error) throw error
+
+  return data.map(like => like.meme_id)
+}
+
 export const getEditedMemes = async (userId: string): Promise<Meme[]> => {
   const { data, error } = await supabase
     .from('memes')
@@ -99,3 +131,4 @@ export const getEditedMemes = async (userId: string): Promise<Meme[]> => {
   }
   return data || [];
 };
+

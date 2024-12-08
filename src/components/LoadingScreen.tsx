@@ -56,9 +56,8 @@ export const LoadingScreen = () => {
           animate="animate"
         >
           <motion.div
-            className="w-32 h-32 mb-8"
+            className="w-50 h-50 mb-8"
             animate={{ 
-              rotate: 360,
               scale: [1, 1.1, 1],
             }}
             transition={{ 
@@ -68,7 +67,7 @@ export const LoadingScreen = () => {
             }}
           >
             <img
-              src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcDd6Y2E3ZWF1Y3E2bXF1OWF4NnBxbzF1ZHBxdWR6NXd1aHF1dG90eCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/3oEjI6SIIHBdRxXI40/giphy.gif"
+              src="https://media1.tenor.com/m/C4__0sQ_-4wAAAAd/hold-up-let-him-cook.gif"
               alt="Loading"
               className="w-full h-full object-contain"
             />

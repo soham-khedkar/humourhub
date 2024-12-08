@@ -1,19 +1,19 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Heart, Share2, Download, Trash } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { Meme } from '../types';
-import { supabase } from '../lib/supabase';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 
 interface MemeGridProps {
   memes: Meme[];
-  onDelete?: (memeId: string) => void;
+  likedMemes: string[];
+  onLike: (meme: Meme) => void;
+  onDelete: (meme: Meme) => void;
+  currentUserId?: string;
 }
 
-export const MemeGrid: React.FC<MemeGridProps> = ({ memes, onDelete }) => {
-  const [likedMemes, setLikedMemes] = useState<Set<string>>(new Set());
-
+export const MemeGrid: React.FC<MemeGridProps> = ({ memes, likedMemes, onLike, onDelete, currentUserId }) => {
   const copyMemeUrl = (url: string) => {
     navigator.clipboard.writeText(url);
     toast.success('URL copied to clipboard!');
@@ -32,48 +32,8 @@ export const MemeGrid: React.FC<MemeGridProps> = ({ memes, onDelete }) => {
       .catch(() => toast.error('Failed to download meme'));
   };
 
-  const likeMeme = async (meme: Meme) => {
-    if (likedMemes.has(meme.id)) {
-      toast.error('You have already liked this meme');
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('memes')
-        .update({ likes: (meme.likes ?? 0) + 1 })
-        .eq('id', meme.id)
-        .select();
-
-      if (error) throw error;
-
-      setLikedMemes(new Set(likedMemes).add(meme.id));
-      toast.success('Meme liked!');
-    } catch (error) {
-      console.error('Error liking meme:', error);
-      toast.error('Failed to like meme');
-    }
-  };
-
-  const handleDelete = async (memeId: string) => {
-    try {
-      const { error } = await supabase
-        .from('memes')
-        .delete()
-        .eq('id', memeId);
-
-      if (error) throw error;
-
-      toast.success('Meme deleted successfully');
-      if (onDelete) onDelete(memeId);
-    } catch (error) {
-      console.error('Error deleting meme:', error);
-      toast.error('Failed to delete meme');
-    }
-  };
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
       {memes.map((meme) => (
         <motion.div
           key={meme.id}
@@ -85,28 +45,24 @@ export const MemeGrid: React.FC<MemeGridProps> = ({ memes, onDelete }) => {
           <img
             src={meme.url}
             alt={meme.title}
-            className="w-full h-64 object-cover"
+            className="w-full h-48 sm:h-64 object-cover"
             loading="lazy"
           />
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileHover={{ opacity: 1 }}
-            className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-          >
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
             <div className="flex space-x-4">
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={() => likeMeme(meme)}
-                className="text-white hover:text-red-500 transition-colors"
+                onClick={() => onLike(meme)}
+                className="text-white hover:text-red-500 transition-colors p-2"
               >
-                <Heart size={24} fill={likedMemes.has(meme.id) ? 'currentColor' : 'none'} />
+                <Heart size={24} fill={likedMemes.includes(meme.id) ? 'currentColor' : 'none'} />
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => copyMemeUrl(meme.url)}
-                className="text-white hover:text-blue-500 transition-colors"
+                className="text-white hover:text-blue-500 transition-colors p-2"
               >
                 <Share2 size={24} />
               </motion.button>
@@ -114,37 +70,40 @@ export const MemeGrid: React.FC<MemeGridProps> = ({ memes, onDelete }) => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => downloadMeme(meme.url, meme.title)}
-                className="text-white hover:text-green-500 transition-colors"
+                className="text-white hover:text-green-500 transition-colors p-2"
               >
                 <Download size={24} />
               </motion.button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="text-white hover:text-red-500 transition-colors"
-                  >
-                    <Trash size={24} />
-                  </motion.button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete the meme.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => handleDelete(meme.id)}>Delete</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              {meme.user_id === currentUserId && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="text-white hover:text-red-500 transition-colors p-2"
+                    >
+                      <Trash size={24} />
+                    </motion.button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the meme.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => onDelete(meme)}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </div>
-          </motion.div>
+          </div>
           <div className="p-4">
             <h3 className="text-lg font-semibold mb-2 text-white">{meme.title}</h3>
+            <p className="text-sm text-gray-400 mb-2">Created by: {meme.username}</p>
             <div className="flex flex-wrap gap-2 mb-3">
               {meme.tags?.map((tag) => (
                 <span 
@@ -158,7 +117,7 @@ export const MemeGrid: React.FC<MemeGridProps> = ({ memes, onDelete }) => {
             {/* <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Heart size={20} className="text-red-500" />
-                <span>{meme.likes}</span>
+                <span>{likedMemes.includes(meme.id) ? (meme.likes ?? 0) + 1 : meme.likes ?? 0}</span>
               </div>
             </div> */}
           </div>
@@ -167,3 +126,6 @@ export const MemeGrid: React.FC<MemeGridProps> = ({ memes, onDelete }) => {
     </div>
   );
 };
+
+export default MemeGrid;
+

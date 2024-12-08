@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useSession } from '@supabase/auth-helpers-react';
 import { Toggle } from '../components/ui/Toggle';
 import { MemeGrid } from '../components/MemeGrid';
-import { getMemes } from '../lib/supabase';
+import { getMemes, getUserLikedMemes, likeMeme, unlikeMeme, deleteMeme } from '../lib/supabase';
 import { Meme } from '../types';
 import { Search } from 'lucide-react';
 import { LoadingScreen } from '../components/LoadingScreen';
@@ -11,26 +12,32 @@ import { toast } from 'sonner';
 type ContentType = 'memes' | 'templates' | 'all';
 
 export const Gallery = () => {
+  const session = useSession();
   const [contentType, setContentType] = useState<ContentType>('all');
   const [memes, setMemes] = useState<Meme[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [likedMemes, setLikedMemes] = useState<string[]>([]);
 
   useEffect(() => {
-    const fetchMemes = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const data = await getMemes(contentType === 'all' ? undefined : contentType.slice(0, -1) as 'meme' | 'template');
-        setMemes(data);
+        const [fetchedMemes, userLikedMemes] = await Promise.all([
+          getMemes(contentType === 'all' ? undefined : contentType.slice(0, -1) as 'meme' | 'template'),
+          session?.user ? getUserLikedMemes(session.user.id) : []
+        ]);
+        setMemes(fetchedMemes);
+        setLikedMemes(userLikedMemes);
       } catch (error) {
-        console.error('Error fetching memes:', error);
+        console.error('Error fetching data:', error);
         toast.error('Failed to fetch memes');
       }
       setLoading(false);
     };
 
-    fetchMemes();
-  }, [contentType]);
+    fetchData();
+  }, [contentType, session]);
 
   const toggleOptions = [
     { value: 'memes', label: 'Memes' },
@@ -41,6 +48,47 @@ export const Gallery = () => {
   const filteredMemes = memes.filter(meme => 
     meme.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  const handleLike = async (meme: Meme) => {
+    if (!session?.user) {
+      toast.error('Please log in to like memes');
+      return;
+    }
+
+    try {
+      if (likedMemes.includes(meme.id)) {
+        await unlikeMeme(meme.id, session.user.id);
+        setLikedMemes(likedMemes.filter(id => id !== meme.id));
+      } else {
+        await likeMeme(meme.id, session.user.id);
+        setLikedMemes([...likedMemes, meme.id]);
+      }
+    } catch (error) {
+      console.error('Error liking/unliking meme:', error);
+      toast.error('Failed to like/unlike meme');
+    }
+  };
+
+  const handleDelete = async (meme: Meme) => {
+    if (!session?.user) {
+      toast.error('Please log in to delete memes');
+      return;
+    }
+
+    if (meme.user_id !== session.user.id) {
+      toast.error('You can only delete your own memes');
+      return;
+    }
+
+    try {
+      await deleteMeme(meme.id, session.user.id);
+      setMemes(memes.filter(m => m.id !== meme.id));
+      toast.success('Meme deleted successfully');
+    } catch (error) {
+      console.error('Error deleting meme:', error);
+      toast.error('Failed to delete meme');
+    }
+  };
 
   if (loading) return <LoadingScreen />;
 
@@ -74,10 +122,17 @@ export const Gallery = () => {
           </div>
         </div>
 
-        <MemeGrid memes={filteredMemes} />
+        <MemeGrid 
+          memes={filteredMemes} 
+          likedMemes={likedMemes}
+          onLike={handleLike}
+          onDelete={handleDelete}
+          currentUserId={session?.user?.id}
+        />
       </div>
     </div>
   );
 };
 
 export default Gallery;
+
